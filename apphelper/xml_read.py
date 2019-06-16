@@ -27,7 +27,11 @@ def GetAnnotBoxLoc(AnotPath):
             ObjBndBoxSet[ObjName].append(BndBoxLoc)
         else:
             ObjBndBoxSet[ObjName] = BndBoxLoc
-    return ObjBndBoxSet
+    size = root.find('size')
+    width = int(size.find('width').text)
+    height = int(size.find('height').text)
+    return ObjBndBoxSet, width, height
+
 
 if __name__ == "__main__":
     boundbox = GetAnnotBoxLoc("./label/附件修理翻修报告.xml")
