@@ -16,3 +16,4 @@ __pycache__
 darknet 
 .vscode/settings.json
 test/*
+label/*

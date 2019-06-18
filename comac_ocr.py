@@ -12,6 +12,7 @@ from fuzzywuzzy import process
 from PIL import Image
 from pandas import DataFrame
 import wordninja
+from sqlalchemy import create_engine
 GPUID = '0'  # 调用GPU序号
 os.environ["CUDA_VISIBLE_DEVICES"] = GPUID
 
@@ -63,6 +64,8 @@ def CorrectImage(img, result_dict, boundboxes, width, height):
 def ChoiceLabel(result_dict):
     if '附件修理/翻修报告' in result_dict.keys():
         label_path = "./label/附件修理翻修报告.xml"
+    elif '批准放行证书/适航批准标签' in result_dict.keys():
+        label_path = './label/批准放行证书适航批准标签.xml'
     return label_path
 
 
@@ -82,7 +85,7 @@ def StructuredData(result_dict, boundboxes):
                 v[0] < value[0]+value[2]/2 and
                 v[1] > value[1]-value[3]/2 and
                     v[1] < value[1]+value[3]/2):
-                if '口' in k or k is '冈':
+                if '口' in k or k is '冈' or k[0] == ']' or k[0] == '厂':
                     continue
 
                 def isEnglish(keyword): return all(
@@ -112,9 +115,13 @@ def ComacOcr(path):
     plot_boxes(dstImg, result)
     result_dict = {line['text']: [line['cx'], line['cy'],
                                   line['w'], line['h']] for line in result}
-    StructuredData(result_dict, boundboxes)
+    return StructuredData(result_dict, boundboxes)
 
 
 if __name__ == '__main__':
     p = './test/11.jpg'
-    ComacOcr(p)
+    sql_data = ComacOcr(p)
+    engine = create_engine(
+        'mysql+pymysql://root:123456@localhost:3306/cadb')
+    con = engine.connect()
+    sql_data.to_sql(name='catest', con=con, if_exists='append', index=False)
